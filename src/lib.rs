@@ -26,8 +26,6 @@ mod tests {
 
         let mut proof = prove(&matrix, &witness, &statement).expect("generating proof should not fail");
 
-        println!("{:?}", proof);
-        println!("{:?}", verify(&matrix, &statement, &proof));
         assert!(verify(&matrix, &statement, &proof).is_ok());
 
         verify(&matrix, &statement, &proof).expect("proof should be valid");
