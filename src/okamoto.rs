@@ -12,12 +12,18 @@ pub fn prove(
     statement: &[RistrettoPoint],
 ) -> Result<Vec<Scalar>, ProveError> {
     if matrix.len() != witness.len() * statement.len() {
-        // TODO: output an error
+        return Err(ProveError::InvalidDimensions);
     }
 
     let M = witness.len();
     let N = statement.len();
 
+    let recomputed_statement: Vec<RistrettoPoint> = (0..N).map(|i| (0..M).map(|j| matrix[i*N+j] * witness[j]).sum::<RistrettoPoint>()).collect();
+
+    if recomputed_statement != statement {
+        return Err(ProveError::Unsound);
+    }
+    
     let mut csprng = OsRng;
     let commitment_trapdoors: Vec<Scalar> = (0..M).map(|_| Scalar::random(&mut csprng)).collect();
 

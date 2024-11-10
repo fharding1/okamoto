@@ -4,6 +4,8 @@ use std::fmt::Display;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum ProveError {
+    InvalidDimensions,
+    Unsound,
     Error,
 }
 
