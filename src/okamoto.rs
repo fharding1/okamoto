@@ -6,7 +6,7 @@ use sha2::{Digest, Sha512};
 
 use rand_core::OsRng;
 
-pub fn prove(
+pub fn prove_linear(
     matrix: &[RistrettoPoint],
     witness: &[Scalar],
     statement: &[RistrettoPoint],
@@ -34,7 +34,9 @@ pub fn prove(
     }
 
     let mut csprng = OsRng;
-    let commitment_trapdoors: Vec<Scalar> = (0..m_witness_dim).map(|_| Scalar::random(&mut csprng)).collect();
+    let commitment_trapdoors: Vec<Scalar> = (0..m_witness_dim)
+        .map(|_| Scalar::random(&mut csprng))
+        .collect();
 
     // compute R_i = \sum_{j=1}^m (r_j M_{i,j}) for all i in [n]
     let commitments: Vec<RistrettoPoint> = (0..n_statement_dim)
@@ -55,7 +57,7 @@ pub fn prove(
     Ok(proof)
 }
 
-fn compute_challenge(
+pub(crate) fn compute_challenge(
     matrix: &[RistrettoPoint],
     statement: &[RistrettoPoint],
     commitments: &[RistrettoPoint],
@@ -72,7 +74,7 @@ fn compute_challenge(
     Scalar::from_hash(hash)
 }
 
-pub fn verify(
+pub fn verify_linear(
     matrix: &[RistrettoPoint],
     statement: &[RistrettoPoint],
     proof: &[Scalar],
