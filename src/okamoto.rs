@@ -6,6 +6,28 @@ use sha2::{Digest, Sha512};
 
 use rand_core::OsRng;
 
+#[cfg(feature="check_soundness")]
+fn linear_sound(matrix: &[RistrettoPoint], witness: &[Scalar], statement: &[RistrettoPoint]) -> bool {
+    let n_statement_dim = statement.len();
+    let m_witness_dim = witness.len();
+
+    // recompute the statement from the matrix and witness so that we can check soundness
+    let recomputed_statement: Vec<RistrettoPoint> = (0..n_statement_dim)
+        .map(|i| {
+            (0..m_witness_dim)
+                .map(|j| matrix[i * n_statement_dim + j] * witness[j])
+                .sum::<RistrettoPoint>()
+        })
+        .collect();
+
+    recomputed_statement == statement
+}
+
+#[cfg(not(feature="check_soundness"))]
+fn linear_sound(_matrix: &[RistrettoPoint], _witness: &[Scalar], _statement: &[RistrettoPoint]) -> bool {
+    true
+}
+
 pub fn prove_linear(
     matrix: &[RistrettoPoint],
     witness: &[Scalar],
@@ -19,17 +41,8 @@ pub fn prove_linear(
         return Err(ProveError::InvalidDimensions);
     }
 
-    // recompute the statement from the matrix and witness so that we can check soundness
-    let recomputed_statement: Vec<RistrettoPoint> = (0..n_statement_dim)
-        .map(|i| {
-            (0..m_witness_dim)
-                .map(|j| matrix[i * n_statement_dim + j] * witness[j])
-                .sum::<RistrettoPoint>()
-        })
-        .collect();
-
     // don't prove false statements
-    if recomputed_statement != statement {
+    if !linear_sound(matrix,witness,statement) {
         return Err(ProveError::Unsound);
     }
 
@@ -81,6 +94,10 @@ pub fn verify_linear(
 ) -> Result<(), VerifyingError> {
     let n_statement_dim = statement.len();
     let m_witness_dim = proof.len() - 1;
+
+    if matrix.len() != n_statement_dim * m_witness_dim {
+        return Err(VerifyingError::Malformed);
+    }
 
     let challenge = proof[0];
     let responses = &proof[1..];

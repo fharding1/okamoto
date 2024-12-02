@@ -6,10 +6,30 @@ use rand_core::OsRng;
 use crate::okamoto::compute_challenge;
 use crate::errors::{ProveError,VerifyingError};
 
-pub fn prove_dleq(generators: &[RistrettoPoint], witness: &Scalar, statement: &[RistrettoPoint]) -> Result<Vec<Scalar>,ProveError> {
-    let recomputed_statement: Vec<RistrettoPoint> = generators.into_iter().map(|g| witness * g).collect();
+#[cfg(feature="check_soundness")]
+fn dleq_sound(generators: &[RistrettoPoint], witness: &Scalar, statement: &[RistrettoPoint]) -> bool {
+    for i in 0..generators.len() {
+        if witness * generators[i] != statement[i] {
+            return false     
+        }
+    }
+    
+    true
+}
 
-    if recomputed_statement != statement {
+#[cfg(not(feature="check_soundness"))]
+fn dleq_sound(_generators: &[RistrettoPoint], _witness: &Scalar, _statement: &[RistrettoPoint]) -> bool {
+    true
+}
+
+pub fn prove_dleq(generators: &[RistrettoPoint], witness: &Scalar, statement: &[RistrettoPoint]) -> Result<Vec<Scalar>,ProveError> {
+    let n_statement_dim = statement.len();
+
+    if n_statement_dim != generators.len() {
+        return Err(ProveError::InvalidDimensions);
+    }
+
+    if !dleq_sound(generators, witness, statement) {
         return Err(ProveError::Unsound);
     }
 
@@ -30,7 +50,7 @@ pub fn verify_dleq(generators: &[RistrettoPoint], statement: &[RistrettoPoint], 
     let n_statement_dim = statement.len();
 
     if n_statement_dim != generators.len() {
-        // TODO: do an error
+        return Err(VerifyingError::Malformed);
     }
 
     let challenge = proof[0];

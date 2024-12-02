@@ -24,6 +24,7 @@ impl Display for ProveError {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VerifyingError {
     Error,
+    Malformed,
     Invalid,
 }
 

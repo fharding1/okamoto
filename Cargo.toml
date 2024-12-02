@@ -3,6 +3,9 @@ name = "okamoto"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+check_soundness = []
+
 [dependencies]
 curve25519-dalek = {version = "4.1.3", features=["rand_core", "serde", "digest"]}
 rand_core = {version = "0.6.4", features=["getrandom"]}
