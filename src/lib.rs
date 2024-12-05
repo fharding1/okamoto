@@ -1,10 +1,10 @@
+mod dleq;
 mod errors;
 mod okamoto;
-mod dleq;
 
+pub use crate::dleq::*;
 pub use crate::errors::*;
 pub use crate::okamoto::*;
-pub use crate::dleq::*;
 
 #[cfg(test)]
 mod tests {
@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature="check_soundness")]
+    #[cfg(feature = "check_soundness")]
     fn dl_repr_check_soundness() {
         let generator_u = RISTRETTO_BASEPOINT_POINT.clone();
         let generator_v = RISTRETTO_BASEPOINT_POINT.clone() * Scalar::from(42 as u32);
@@ -60,7 +60,8 @@ mod tests {
         let x = Vec::from([Scalar::from(12345 as u32)]);
         let statement = Vec::from([RistrettoPoint::mul_base(&x[0])]);
 
-        let mut proof = prove_linear(&matrix, &x, &statement).expect("generating proof should not fail");
+        let mut proof =
+            prove_linear(&matrix, &x, &statement).expect("generating proof should not fail");
 
         assert!(verify_linear(&matrix, &statement, &proof).is_ok());
 
@@ -72,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature="check_soundness")]
+    #[cfg(feature = "check_soundness")]
     fn dl_pok_check_soundness() {
         let matrix = Vec::from([RISTRETTO_BASEPOINT_POINT.clone()]);
         let x = Vec::from([Scalar::from(12345 as u32)]);
@@ -89,7 +90,8 @@ mod tests {
         let witness = Scalar::from(10 as u32);
         let statement = Vec::from([generator * witness, generator_h * witness]);
 
-        let mut proof = prove_dleq(&generators, &witness, &statement).expect("generating proof should not fail");
+        let mut proof = prove_dleq(&generators, &witness, &statement)
+            .expect("generating proof should not fail");
 
         assert!(verify_dleq(&generators, &statement, &proof).is_ok());
 
@@ -99,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature="check_soundness")]
+    #[cfg(feature = "check_soundness")]
     fn basic_dleq_check_soundness() {
         let generator = RISTRETTO_BASEPOINT_POINT.clone();
         let generator_h = RISTRETTO_BASEPOINT_POINT.clone() * Scalar::from(42 as u32);
@@ -122,9 +124,10 @@ mod tests {
 
         let generators = [generator, generator_h1, generator_h2, generator_h3];
         let witness = Scalar::from(10 as u32);
-        let statement: Vec<RistrettoPoint> = generators.into_iter().map(|g| g*witness).collect();
+        let statement: Vec<RistrettoPoint> = generators.into_iter().map(|g| g * witness).collect();
 
-        let mut proof = prove_dleq(&generators, &witness, &statement).expect("generating proof should not fail");
+        let mut proof = prove_dleq(&generators, &witness, &statement)
+            .expect("generating proof should not fail");
 
         assert!(verify_dleq(&generators, &statement, &proof).is_ok());
 
@@ -134,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature="check_soundness")]
+    #[cfg(feature = "check_soundness")]
     fn multi_dleq_check_soundness() {
         let generator = RISTRETTO_BASEPOINT_POINT.clone();
         let generator_h1 = RISTRETTO_BASEPOINT_POINT.clone() * Scalar::from(42 as u32);
@@ -143,10 +146,12 @@ mod tests {
 
         let generators = [generator, generator_h1, generator_h2, generator_h3];
         let witness = Scalar::from(10 as u32);
-        let statement: Vec<RistrettoPoint> = generators.into_iter().map(|g| g*witness*Scalar::from(2 as u32)).collect();
+        let statement: Vec<RistrettoPoint> = generators
+            .into_iter()
+            .map(|g| g * witness * Scalar::from(2 as u32))
+            .collect();
 
         assert!(prove_dleq(&generators, &witness, &statement).is_err()); // should not prove false
                                                                          // statements
-
     }
 }

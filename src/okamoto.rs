@@ -6,8 +6,12 @@ use sha2::{Digest, Sha512};
 
 use rand_core::OsRng;
 
-#[cfg(feature="check_soundness")]
-fn linear_sound(matrix: &[RistrettoPoint], witness: &[Scalar], statement: &[RistrettoPoint]) -> bool {
+#[cfg(feature = "check_soundness")]
+fn linear_sound(
+    matrix: &[RistrettoPoint],
+    witness: &[Scalar],
+    statement: &[RistrettoPoint],
+) -> bool {
     let n_statement_dim = statement.len();
     let m_witness_dim = witness.len();
 
@@ -23,8 +27,12 @@ fn linear_sound(matrix: &[RistrettoPoint], witness: &[Scalar], statement: &[Rist
     recomputed_statement == statement
 }
 
-#[cfg(not(feature="check_soundness"))]
-fn linear_sound(_matrix: &[RistrettoPoint], _witness: &[Scalar], _statement: &[RistrettoPoint]) -> bool {
+#[cfg(not(feature = "check_soundness"))]
+fn linear_sound(
+    _matrix: &[RistrettoPoint],
+    _witness: &[Scalar],
+    _statement: &[RistrettoPoint],
+) -> bool {
     true
 }
 
@@ -42,7 +50,7 @@ pub fn prove_linear(
     }
 
     // don't prove false statements
-    if !linear_sound(matrix,witness,statement) {
+    if !linear_sound(matrix, witness, statement) {
         return Err(ProveError::Unsound);
     }
 
@@ -114,9 +122,8 @@ pub fn verify_linear(
 
     let recomputed_challenge = compute_challenge(&matrix, &statement, &recomputed_commitments);
 
-    if recomputed_challenge == challenge {
-        return Ok(());
+    match recomputed_challenge == challenge {
+        true => Ok(()),
+        false => Err(VerifyingError::Invalid),
     }
-
-    Err(VerifyingError::Invalid)
 }

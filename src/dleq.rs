@@ -3,26 +3,38 @@ use curve25519_dalek::scalar::Scalar;
 
 use rand_core::OsRng;
 
+use crate::errors::{ProveError, VerifyingError};
 use crate::okamoto::compute_challenge;
-use crate::errors::{ProveError,VerifyingError};
 
-#[cfg(feature="check_soundness")]
-fn dleq_sound(generators: &[RistrettoPoint], witness: &Scalar, statement: &[RistrettoPoint]) -> bool {
+#[cfg(feature = "check_soundness")]
+fn dleq_sound(
+    generators: &[RistrettoPoint],
+    witness: &Scalar,
+    statement: &[RistrettoPoint],
+) -> bool {
     for i in 0..generators.len() {
         if witness * generators[i] != statement[i] {
-            return false     
+            return false;
         }
     }
-    
+
     true
 }
 
-#[cfg(not(feature="check_soundness"))]
-fn dleq_sound(_generators: &[RistrettoPoint], _witness: &Scalar, _statement: &[RistrettoPoint]) -> bool {
+#[cfg(not(feature = "check_soundness"))]
+fn dleq_sound(
+    _generators: &[RistrettoPoint],
+    _witness: &Scalar,
+    _statement: &[RistrettoPoint],
+) -> bool {
     true
 }
 
-pub fn prove_dleq(generators: &[RistrettoPoint], witness: &Scalar, statement: &[RistrettoPoint]) -> Result<Vec<Scalar>,ProveError> {
+pub fn prove_dleq(
+    generators: &[RistrettoPoint],
+    witness: &Scalar,
+    statement: &[RistrettoPoint],
+) -> Result<Vec<Scalar>, ProveError> {
     let n_statement_dim = statement.len();
 
     if n_statement_dim != generators.len() {
@@ -37,7 +49,10 @@ pub fn prove_dleq(generators: &[RistrettoPoint], witness: &Scalar, statement: &[
 
     let commitment_trapdoor = Scalar::random(&mut csprng);
 
-    let commitments: Vec<RistrettoPoint> = generators.into_iter().map(|g| commitment_trapdoor * g).collect();
+    let commitments: Vec<RistrettoPoint> = generators
+        .into_iter()
+        .map(|g| commitment_trapdoor * g)
+        .collect();
 
     let challenge = compute_challenge(&generators, &statement, &commitments);
 
@@ -46,7 +61,11 @@ pub fn prove_dleq(generators: &[RistrettoPoint], witness: &Scalar, statement: &[
     Ok(proof)
 }
 
-pub fn verify_dleq(generators: &[RistrettoPoint], statement: &[RistrettoPoint], proof: &[Scalar]) -> Result<(), VerifyingError> {
+pub fn verify_dleq(
+    generators: &[RistrettoPoint],
+    statement: &[RistrettoPoint],
+    proof: &[Scalar],
+) -> Result<(), VerifyingError> {
     let n_statement_dim = statement.len();
 
     if n_statement_dim != generators.len() {
@@ -56,13 +75,14 @@ pub fn verify_dleq(generators: &[RistrettoPoint], statement: &[RistrettoPoint], 
     let challenge = proof[0];
     let response = proof[1];
 
-    let recomputed_commitments: Vec<RistrettoPoint> = (0..n_statement_dim).map(|i| response * generators[i] - challenge * statement[i]).collect();
+    let recomputed_commitments: Vec<RistrettoPoint> = (0..n_statement_dim)
+        .map(|i| response * generators[i] - challenge * statement[i])
+        .collect();
 
     let recomputed_challenge = compute_challenge(&generators, &statement, &recomputed_commitments);
 
-    if recomputed_challenge == challenge {
-        return Ok(());
+    match recomputed_challenge == challenge {
+        true => Ok(()),
+        false => Err(VerifyingError::Invalid),
     }
-
-    Err(VerifyingError::Invalid)
 }
