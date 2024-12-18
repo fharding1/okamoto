@@ -5,48 +5,28 @@ use std::fmt::Display;
 pub enum ProveError {
     InvalidDimensions,
     Unsound,
-    Error,
 }
 
 impl Display for ProveError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        /*match *self {
-            SigningError::CompressedPointFormat => {
-                write!(f, "Compressed Ristretto point is incorrectly formatted")
-            }
-            SigningError::PointDecompression => write!(f, "Cannot decompress Ristretto point"),
-            SigningError::ScalarFormat => write!(f, "Scalar is not canonically formatted"),
-        }*/
-        write!(f, "Error")
+        match *self {
+            ProveError::InvalidDimensions => write!(f, "matrix length should be statement length times witness length"),
+            ProveError::Unsound => write!(f, "statement is not true for the provided witness, if you really want to proceed then turn off check_soundness feature"),
+        }
     }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VerifyingError {
-    Error,
     Malformed,
     Invalid,
 }
 
 impl Display for VerifyingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        /*match *self {
-            SigningError::CompressedPointFormat => {
-                write!(f, "Compressed Ristretto point is incorrectly formatted")
-            }
-            SigningError::PointDecompression => write!(f, "Cannot decompress Ristretto point"),
-            SigningError::ScalarFormat => write!(f, "Scalar is not canonically formatted"),
-        }*/
-        write!(f, "Error")
+        match *self {
+            VerifyingError::Malformed => write!(f, "proof does not have the correct size"),
+            VerifyingError::Invalid => write!(f, "proof is not valid"),
+        }
     }
 }
-
-/*
-impl Error for SigningError {}
-
-impl From<TryFromSliceError> for SigningError {
-    fn from(_: TryFromSliceError) -> SigningError {
-        SigningError::CompressedPointFormat
-    }
-}
-*/
